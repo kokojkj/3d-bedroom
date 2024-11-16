@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aframe/1.4.2/aframe.min.js"></script>
+    <script>
+      AFRAME.registerComponent('orbit-controls', {
+        schema: {
+          minDistance: { default: 1 },       
+          maxDistance: { default: 15 },      
+          zoomSpeed: { default: 0.5 },       
+          rotateSpeed: { default: 1 }        
+        },
+        init: function() {
+          this.camera = this.el.components.camera.camera;   
+          this.el.sceneEl.canvas.addEventListener('wheel', this.onWheel.bind(this));
+          this.el.sceneEl.canvas.addEventListener('mousedown', this.onMouseDown.bind(this));
+          this.el.sceneEl.canvas.addEventListener('mouseup', this.onMouseUp.bind(this));
+          this.el.sceneEl.canvas.addEventListener('mousemove', this.onMouseMove.bind(this));
+          this.distance = 10;        
+          this.rotation = { x: 0, y: 0 };   
+          this.isDragging = false;   
+          this.lastMousePosition = { x: 0, y: 0 };  
+          this.updateCameraPosition();  
+        },
+        onWheel: function(event) {
+          event.preventDefault(); 
+          const delta = event.deltaY * this.data.zoomSpeed * 0.01;  
+          this.distance = Math.max(this.data.minDistance, 
+                                   Math.min(this.data.maxDistance, 
+                                            this.distance + delta));
+          this.updateCameraPosition(); 
+        },
+        onMouseDown: function(event) {
+          this.isDragging = true;   
+          this.lastMousePosition = { x: event.clientX, y: event.clientY }; 
+        },
+        onMouseUp: function() {
+          this.isDragging = false;  
+        },
+        onMouseMove: function(event) {
+          if (!this.isDragging) return;  
+          const deltaMove = {
+            x: event.clientX - this.lastMousePosition.x,  
+            y: event.clientY - this.lastMousePosition.y   
+          };
+          this.rotation.x += deltaMove.y * 0.01 * this.data.rotateSpeed;
+          this.rotation.y += deltaMove.x * 0.01 * this.data.rotateSpeed;
+          this.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, this.rotation.x));
+           this.lastMousePosition = { x: event.clientX, y: event.clientY };  
+          this.updateCameraPosition();  
+        },
+        updateCameraPosition: function() {
+          const phi = this.rotation.x;   
+          const theta = this.rotation.y; 
+          const x = this.distance * Math.sin(theta) * Math.cos(phi);
+          const y = this.distance * Math.sin(phi) + 2;  
+          const z = this.distance * Math.cos(theta) * Math.cos(phi); 
+          this.camera.position.set(x, y, z);
+          this.camera.lookAt(0, 2, 0);
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <a-scene>
+      <a-box position="0 4 0" width="10" height="0.1" depth="12" color="#F5F5F5"></a-box>
+      <a-box position="0 0 0" width="10" height="0.1" depth="12" color="#8B4513"></a-box>
+      <a-box position="5 4 0" width="0.1" height="8" depth="12" color="#FFF5E1"></a-box>
+      <a-box position="-5 4 0" width="0.1" height="8" depth="12" color="#FFF5E1"></a-box>
+      <a-box position="0 4 6" width="10" height="8" depth="0.1" color="#FFF5E1"></a-box>
+      <a-box position="0 4 -6" width="10" height="8" depth="0.1" color="#FFF5E1"></a-box>
+      <a-box position="-3 0.75 0" width="3.5" height="1.5" depth="7" color="#8B4513"></a-box>  
+      <a-box position="-3 1.6 0" width="3.3" height="0.3" depth="6.8" color="#FFFFFF"></a-box>  
+      <a-box position="-3 2.2 2.5" width="3.2" height="1" depth="1.8" color="#4169E1"></a-box>  
+      <a-box position="-3 1.8 -1" width="3.2" height="0.1" depth="4" color="#4169E1"></a-box>
+      <a-box position="3 1.5 -4" width="3" height="3" depth="1.5" color="#8B4513"></a-box>
+      <a-box position="3 1.5 -3.2" width="2.8" height="0.1" depth="0.1" color="#B8860B"></a-box>  
+      <a-box position="3 2.5 -3.2" width="2.8" height="0.1" depth="0.1" color="#B8da860B"></a-box>
+      <a-light type="ambient" color="#FFF" intensity="0.5"></a-light>
+      <a-light type="point" position="0 5 0" intensity="0.7" color="#FFFFFF"></a-light>
+      <a-light type="directional" position="-5 4 0" intensity="0.5" color="#FFE"></a-light>
+      <a-box position="-4.95 4 0" width="0.1" height="3" depth="4" color="#87CEEB"></a-box>  
+      <a-box position="-4.9 4 -2" width="0.05" height="3" depth="0.1" color="white"></a-box>  
+      <a-box position="-4.9 4 2" width="0.05" height="3" depth="0.1" color="white"></a-box>   
+      <a-box position="-4.9 2.5 0" width="0.05" height="0.1" depth="4" color="white"></a-box>  
+      <a-box position="-4.9 5.5 0" width="0.05" height="0.1" depth="4" color="white"></a-box>  
+      <a-cylinder position="0 0.05 0" radius="2" height="0.1" color="#FFFFFF"></a-cylinder>
+      <a-entity position="1 2 1">
+        <a-camera look-controls wasd-controls></a-camera>
+      </a-entity>
+    </a-scene>
+  </body>
+</html>
